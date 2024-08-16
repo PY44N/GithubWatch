@@ -5,9 +5,7 @@ import {
   runFileInDirectory,
 } from "./command_runner.js";
 import { Repository } from "./repository.js";
-
-const config_contents = fs.readFileSync("ghwatch.json");
-const config = JSON.parse(config_contents);
+import { config } from "./config.js";
 
 let monitoredRepos = [];
 

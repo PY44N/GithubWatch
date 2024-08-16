@@ -1,9 +1,6 @@
 import { Octokit } from "@octokit/core";
 import { randomInt } from "crypto";
-import fs from "fs";
-
-const config_contents = fs.readFileSync("ghwatch.json");
-const config = JSON.parse(config_contents);
+import { config } from "./config.js";
 
 const client = new Octokit({
   auth: config.Token,
