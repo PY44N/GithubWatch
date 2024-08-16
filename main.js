@@ -1,6 +1,7 @@
 import { Octokit } from "@octokit/core";
 import fs from "fs";
 import { execSync } from "child_process";
+import { randomInt } from "crypto";
 
 const config_contents = fs.readFileSync("ghwatch.json");
 const config = JSON.parse(config_contents);
@@ -20,11 +21,25 @@ function runCommand(cmd) {
 }
 
 async function getLastCommitHash(repo) {
-  return await client.request(`GET /repos/${repo}/commits`, {
+  let response = await client.request(`GET /repos/${repo}/commits`, {
     headers: {
       "X-GitHub-Api-Version": "2022-11-28",
     },
-  }).data[0].sha;
+  });
+  try {
+    return response.data[0].sha;
+  } catch {
+    console.log(`Unable to fetch last commit hash from data: ${response}`);
+    return randomInt(2048).toString();
+  }
+}
+
+function executeFile(file, dir) {
+  let contents = fs.readFileSync(file).toString();
+  for (const rawLine of contents.split("\n")) {
+    const line = rawLine.replace("\r", "");
+    runCommandWithDirectory(line, dir);
+  }
 }
 
 class Repo {
@@ -46,18 +61,45 @@ for (const repoName in config.Repos) {
     runCommand(`git clone https://github.com/${repo} ${repoName}`);
   }
 
+  if (fs.existsSync(`${repoName}/start.ghwatch`)) {
+    console.log(`Found startup file ${repoName}/start.ghwatch, executing...`);
+    executeFile(`${repoName}/start.ghwatch`, repoName);
+  }
+
   monitoredRepos.push(new Repo(repoName, repo, await getLastCommitHash(repo)));
 }
 
 setInterval(async () => {
-  for (const repo in monitoredRepos) {
+  let updated = false;
+
+  for (const repo of monitoredRepos) {
     const currentLastCommitHash = await getLastCommitHash(repo.repo);
     if (currentLastCommitHash != repo.lastCommitHash) {
       console.log(`Detected changes to ${repo.name}, updating...`);
 
+      if (fs.existsSync(`${repo.name}/stop.ghwatch`)) {
+        console.log(
+          `Found shutdown file ${repo.name}/stop.ghwatch, executing...`
+        );
+        executeFile(`${repo.name}/stop.ghwatch`, repo.name);
+      }
+
       runCommandWithDirectory("git pull", repo.name);
 
+      if (fs.existsSync(`${repo.name}/start.ghwatch`)) {
+        console.log(
+          `Found startup file ${repo.name}/start.ghwatch, executing...`
+        );
+        executeFile(`${repo.name}/start.ghwatch`, repo.name);
+      }
+
       repo.lastCommitHash = currentLastCommitHash;
+
+      updated = true;
     }
   }
-}, 60 * 1000);
+
+  if (!updated) {
+    console.log("All repos up to date, waiting...");
+  }
+}, 2 * 60 * 1000);
