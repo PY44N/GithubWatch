@@ -37,7 +37,7 @@ A simple ghwatch.json would look something like this
 }
 ```
 
-This configuration would make GitHub Watch monitor itself for changes
+This configuration would make GitHub Watch monitor itself for changes. The repositories must be listed in Author/Repo format for the GitHub Watch to work
 
 Note: A GitHub token is only required if you wish to monitor private repositories
 
