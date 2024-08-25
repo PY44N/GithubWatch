@@ -19,6 +19,8 @@ new ExitHandler(() => {
       runFileInDirectory(`${repo.name}/stop.ghwatch`, repo.name);
     }
   }
+
+  console.log("GitHub Watch shutdown cleanly");
 });
 
 for (const repoName in config.Repos) {
