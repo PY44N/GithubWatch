@@ -6,8 +6,22 @@ import {
 } from "./command_runner.js";
 import { Repository } from "./repository.js";
 import { config } from "./config.js";
+import { ExitHandler } from "./exit_handler.js";
 
 let monitoredRepos = [];
+
+new ExitHandler(() => {
+  for (const repo of monitoredRepos) {
+    if (fs.existsSync(`${repo.name}/stop.ghwatch`)) {
+      console.log(
+        `Found shutdown file ${repo.name}/stop.ghwatch, executing...`
+      );
+      runFileInDirectory(`${repo.name}/stop.ghwatch`, repo.name);
+    }
+  }
+
+  console.log("GitHub Watch shutdown cleanly");
+});
 
 for (const repoName in config.Repos) {
   const repo = config.Repos[repoName];
