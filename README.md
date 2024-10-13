@@ -60,5 +60,5 @@ docker compose up -d
 stop.ghwatch:
 
 ```
-docker stop CONTAINER_NAME
+docker compose stop
 ```
