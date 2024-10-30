@@ -2,6 +2,8 @@
 
 A small program for automatically deploying the newest commit of a program
 
+Created for use in my own home server
+
 Please make an issue if you find any problems and feel free to submit pull requests with any improvements you might have
 
 ## Usage
